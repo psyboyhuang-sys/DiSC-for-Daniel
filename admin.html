@@ -366,7 +366,8 @@ async function connectGitHub() {
   try {
     const data = await fetchConfig();
     fileSHA = data.sha;
-    passwords = parsePasswords(atob(data.content.replace(/\n/g, '')));
+    // atob() 只認 ASCII，中文需先用 escape/decodeURIComponent 還原 UTF-8
+    passwords = parsePasswords(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
     renderPasswordList();
     document.getElementById('token-card').style.display = 'none';
     document.getElementById('main-card').style.display = 'block';
