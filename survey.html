@@ -233,17 +233,21 @@ body {
 
 /* ── Pool ── */
 .pool-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
-.pool { display: flex; flex-wrap: wrap; gap: 8px; min-height: 44px; }
+/* 用 grid 均分四格，所有詞卡等寬 */
+.pool { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; min-height: 44px; }
 .chip-pool {
   background: linear-gradient(135deg,#667eea18,#764ba212);
   border: 1.5px solid #667eea50;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 10px 6px;
   font-size: 13px; font-weight: 700; color: var(--text);
   cursor: pointer; user-select: none;
+  text-align: center;
   transition: transform 0.12s, box-shadow 0.12s, background 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1.3;
 }
 .chip-pool:hover, .chip-pool:active {
   transform: translateY(-2px) scale(1.03);
@@ -251,7 +255,11 @@ body {
   border-color: var(--accent);
   background: linear-gradient(135deg,#667eea28,#764ba220);
 }
-.pool-empty-hint { font-size: 12px; color: #aaa; font-style: italic; align-self: center; }
+.pool-empty-hint {
+  grid-column: 1 / -1;
+  font-size: 12px; color: #aaa; font-style: italic;
+  text-align: center; align-self: center; padding: 8px 0;
+}
 
 /* ── Submit ── */
 .submit-wrap { text-align: center; margin-top: 28px; }
@@ -309,12 +317,35 @@ body {
 .score-block .type-traits { font-size: 11px; opacity: 0.8; margin-top: 10px; line-height: 1.5; }
 
 /* 長條圖 */
-.bar-chart { margin: 4px 0 24px; }
-.bar-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.bar-label { width: 22px; font-weight: 800; font-size: 14px; text-align: right; flex-shrink: 0; }
-.bar-track { flex: 1; background: #f0f0f0; border-radius: 99px; height: 14px; overflow: hidden; }
+.bar-chart { margin: 4px 0 24px; padding: 0 4px; }
+.bar-row   { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.bar-label { width: 20px; font-weight: 900; font-size: 15px; text-align: center; flex-shrink: 0; line-height: 1; }
+.bar-track { flex: 1; background: #f0f0f0; border-radius: 99px; height: 16px; overflow: hidden; }
 .bar-fill  { height: 100%; border-radius: 99px; transition: width 1s ease; }
-.bar-val   { width: 26px; font-size: 13px; font-weight: 700; text-align: left; flex-shrink: 0; }
+.bar-val   { width: 30px; font-size: 14px; font-weight: 700; text-align: left; flex-shrink: 0; }
+
+/* 日期 + 提示警語 */
+.result-meta {
+  background: #f8f9ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+.result-date {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.result-disclaimer {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.75;
+  border-left: 3px solid #a78bfa;
+  padding-left: 12px;
+}
 
 .btn-download {
   background: linear-gradient(135deg,#667eea,#764ba2);
@@ -375,7 +406,7 @@ body {
       <div class="scene-example-chip" onclick="selectScene(this,'朋友相處')">朋友相處</div>
       <div class="scene-example-chip" onclick="selectScene(this,'家人互動')">家人互動</div>
       <div class="scene-example-chip" onclick="selectScene(this,'伴侶關係')">伴侶關係</div>
-      <div class="scene-example-chip" onclick="selectScene(this,'自我認識')">自我認識</div>
+      <div class="scene-example-chip" onclick="selectSceneCustom(this)">自訂 ✏️</div>
     </div>
     <div class="scene-input-label">您的場景（必填）：</div>
     <div class="scene-input-wrap">
@@ -408,6 +439,13 @@ body {
     <!-- 順時針 2×2：D(左上) I(右上) C(左下) S(右下) -->
     <div class="score-grid" id="score-grid"></div>
     <div class="bar-chart" id="bar-chart"></div>
+    <div class="result-meta">
+      <div class="result-date" id="result-date"></div>
+      <div class="result-disclaimer">
+        每次測驗結果會隨時間與情境不同而動態變化，<br>
+        重點不在分數，而是你的互動是否朝自己想要的地方去。
+      </div>
+    </div>
     <button class="btn-download" onclick="downloadImage()">⬇ 下載結果圖片</button>
     <button class="btn-redo" onclick="location.reload()">重新作答</button>
   </div>
@@ -455,6 +493,17 @@ function selectScene(chip, text) {
   chip.classList.add('selected');
   document.getElementById('scene-input').value = text;
   clearSceneError();
+}
+
+function selectSceneCustom(chip) {
+  // 點「自訂」：清空輸入格、移除預設選中，聚焦讓使用者直接輸入
+  document.querySelectorAll('.scene-example-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.add('selected');
+  const inp = document.getElementById('scene-input');
+  inp.value = '';
+  inp.placeholder = '請輸入您的場景…';
+  clearSceneError();
+  setTimeout(() => inp.focus(), 50);
 }
 
 function clearSceneError() {
@@ -643,6 +692,11 @@ function renderResults(scores, scene) {
   // 場景標籤
   document.getElementById('results-scene-tag').textContent = '場景：' + scene;
 
+  // 日期
+  const today = new Date();
+  const dateStr = `${today.getFullYear()} 年 ${today.getMonth()+1} 月 ${today.getDate()} 日`;
+  document.getElementById('result-date').textContent = '📅 ' + dateStr;
+
   // 2×2 順時針方塊
   const grid = document.getElementById('score-grid');
   grid.innerHTML = '';
@@ -695,7 +749,7 @@ function downloadImage() {
   const scene  = window._discScene || '';
   if (!scores) return;
 
-  const W = 900, H = 620;
+  const W = 900, H = 700;
   const canvas = document.createElement('canvas');
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
@@ -709,21 +763,31 @@ function downloadImage() {
 
   // 標題區
   ctx.fillStyle = 'rgba(255,255,255,0.07)';
-  ctx.fillRect(0, 0, W, 78);
+  ctx.fillRect(0, 0, W, 82);
 
+  // 標題（左移為日期騰空間）
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 25px "PingFang TC","Microsoft JhengHei",Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('我的行事風格結果', W / 2, 40);
+  ctx.font = 'bold 24px "PingFang TC","Microsoft JhengHei",Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('我的行事風格結果', 28, 36);
+
+  // 日期（右上角）
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '13px "PingFang TC","Microsoft JhengHei",Arial';
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, W - 24, 36);
 
   // 場景標籤
+  ctx.textAlign = 'center';
   const tagW = ctx.measureText('場景：' + scene).width + 32;
-  rrect(ctx, W/2 - tagW/2, 48, tagW, 22, 11);
+  rrect(ctx, W/2 - tagW/2, 50, tagW, 22, 11);
   ctx.fillStyle = 'rgba(99,102,241,0.4)';
   ctx.fill();
   ctx.fillStyle = 'rgba(200,210,255,0.9)';
   ctx.font = '13px "PingFang TC","Microsoft JhengHei",Arial';
-  ctx.fillText('場景：' + scene, W / 2, 63);
+  ctx.fillText('場景：' + scene, W / 2, 65);
 
   // 四個象限（順時針：D左上 I右上 C左下 S右下）
   const colors = { D:'#E74C3C', I:'#F39C12', S:'#27AE60', C:'#2980B9' };
@@ -740,7 +804,7 @@ function downloadImage() {
   const bW = 200, bH = 185, gap = 16;
   const gridW = bW * 2 + gap;
   const startX = (W - gridW) / 2;
-  const startY = 90;
+  const startY = 96;
 
   // 順時針：D(col0,row0) I(col1,row0) C(col0,row1) S(col1,row1)
   const positions = { D:[0,0], I:[1,0], C:[0,1], S:[1,1] };
@@ -816,11 +880,30 @@ function downloadImage() {
     ctx.fillText(scores[type], barX + barW * pct + 7, y + barH - 2);
   });
 
+  // 提示警語區塊
+  const disclaimerY = H - 82;
+  rrect(ctx, 28, disclaimerY, W - 56, 60, 10);
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(167,139,250,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 左側紫色裝飾線
+  ctx.fillStyle = 'rgba(167,139,250,0.8)';
+  ctx.fillRect(36, disclaimerY + 10, 3, 40);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = '13px "PingFang TC","Microsoft JhengHei",Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('每次測驗結果會隨時間與情境不同而動態變化，', 50, disclaimerY + 27);
+  ctx.fillText('重點不在分數，而是你的互動是否朝自己想要的地方去。', 50, disclaimerY + 48);
+
   // Footer
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
   ctx.font = '11px "PingFang TC","Microsoft JhengHei",Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('DISC Relational Style Assessment', W / 2, H - 12);
+  ctx.fillText('DISC Relational Style Assessment', W / 2, H - 10);
 
   const dataUrl = canvas.toDataURL('image/png');
 
