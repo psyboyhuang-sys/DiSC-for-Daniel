@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DISC 個性問卷</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,6 +17,7 @@
   --text: #1a1a2e;
   --muted: #8892a4;
   --border: #e2e8f0;
+  --accent: #667eea;
   --radius: 14px;
 }
 
@@ -32,7 +32,7 @@ body {
 .header {
   background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
   color: white;
-  padding: 20px 24px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -41,188 +41,213 @@ body {
   z-index: 100;
   box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
+.header-title { font-size: 15px; font-weight: 700; }
+.header-sub   { font-size: 11px; opacity: 0.55; margin-top: 2px; }
 
-.header-title { font-size: 16px; font-weight: 700; }
-.header-sub { font-size: 12px; opacity: 0.6; margin-top: 2px; }
-
-.progress-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-  min-width: 120px;
-}
-
+.progress-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 110px; }
 .progress-text { font-size: 12px; opacity: 0.7; }
+.progress-bar-outer { width: 110px; height: 6px; background: rgba(255,255,255,0.18); border-radius: 99px; overflow: hidden; }
+.progress-bar-inner { height: 100%; background: linear-gradient(90deg,#667eea,#a78bfa); border-radius: 99px; transition: width 0.4s ease; width: 0%; }
 
-.progress-bar-outer {
-  width: 120px;
-  height: 6px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.progress-bar-inner {
-  height: 100%;
-  background: linear-gradient(90deg, #667eea, #764ba2);
-  border-radius: 99px;
-  transition: width 0.4s ease;
-  width: 0%;
-}
+/* ── Container ── */
+.container { max-width: 680px; margin: 0 auto; padding: 0 14px 60px; }
 
 /* ── Instructions ── */
 .instructions {
   background: white;
-  border-left: 4px solid #667eea;
-  margin: 24px auto;
-  max-width: 780px;
-  padding: 18px 22px;
-  border-radius: 0 var(--radius) var(--radius) 0;
-  font-size: 14px;
+  border-left: 4px solid var(--accent);
+  margin: 20px 0 14px;
+  padding: 16px 20px;
+  border-radius: 0 10px 10px 0;
+  font-size: 15px;
   color: #444;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 .instructions strong { color: var(--text); }
-
-/* ── Main container ── */
-.container {
-  max-width: 780px;
-  margin: 0 auto;
-  padding: 0 16px 48px;
-}
 
 /* ── Question card ── */
 .q-card {
   background: var(--card);
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
-  margin-bottom: 12px;
-  padding: 18px 20px;
+  margin-bottom: 10px;
+  padding: 16px;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
-
 .q-card.complete {
-  border-color: #27AE60;
-  box-shadow: 0 0 0 1px rgba(39,174,96,0.15);
+  border-color: var(--s);
+  box-shadow: 0 0 0 1px rgba(39,174,96,0.12);
 }
 
 .q-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
+.q-num    { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.3px; }
+.q-right  { display: flex; align-items: center; gap: 10px; }
+.q-status { font-size: 12px; color: var(--muted); transition: color 0.3s; }
+.q-card.complete .q-status { color: var(--s); font-weight: 700; }
 
-.q-num {
-  font-size: 12px;
-  font-weight: 700;
+.btn-reset {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.q-status {
-  font-size: 13px;
-  color: var(--muted);
-  transition: color 0.3s;
-}
-.q-card.complete .q-status { color: #27AE60; }
-
-/* ── Score labels ── */
-.score-labels {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.score-label {
-  text-align: center;
   font-size: 11px;
-  font-weight: 700;
-  color: var(--muted);
-  padding: 2px 0;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
 }
-.score-label:first-child { color: #764ba2; }
-.score-label:last-child { color: #aaa; }
+.btn-reset:hover { border-color: #aaa; color: var(--text); }
 
-/* ── Sortable chips row ── */
-.chips-row {
+/* ── Slots row ── */
+/* 使用兩列 grid：第一列放標籤，第二列放格子，確保完全對齊 */
+.slots-area {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  min-height: 52px;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  margin-bottom: 10px;
 }
 
-.chip {
-  background: linear-gradient(135deg, #667eea15, #764ba215);
-  border: 1.5px solid #667eea40;
-  border-radius: 10px;
-  padding: 10px 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+.slot-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
   text-align: center;
-  cursor: grab;
-  user-select: none;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s, background 0.2s;
+  line-height: 1.3;
+  /* 固定高度確保四個標籤高度一致，格子才會對齊 */
+  height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 2px;
+}
+.slot-label.first { color: #764ba2; }
+.slot-label.last  { color: #bbb; }
+.slot-label span  { font-size: 10px; font-weight: 500; display: block; }
+
+.slot {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 10px;
+  border: 2px dashed #d1d9e8;
+  background: #f8f9ff;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.3;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.slot.filled {
+  border: 2px solid var(--accent);
+  background: linear-gradient(135deg,#667eea12,#764ba210);
+  cursor: pointer;
+}
+.slot.filled:hover {
+  border-color: #E74C3C;
+  background: #fff0f0;
+}
+.slot.filled:hover::after {
+  content: '×';
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  font-size: 13px;
+  color: #E74C3C;
+  font-weight: 900;
+  line-height: 1;
 }
 
-.chip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102,126,234,0.25);
-  border-color: #667eea80;
-}
-
-.chip.sortable-ghost {
-  opacity: 0.3;
-  background: #667eea20;
-}
-
-.chip.sortable-chosen {
-  cursor: grabbing;
-  transform: scale(1.04);
-  box-shadow: 0 8px 24px rgba(102,126,234,0.35);
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea25, #764ba225);
-}
-
-/* Chip score-position colour hints (assigned after each sort) */
-.chip[data-pos="0"] { border-color: #764ba260; background: linear-gradient(135deg,#764ba215,#667eea10); }
-.chip[data-pos="3"] { border-color: #ccc; background: #fafafa; color: #999; }
-
-/* ── Submit button ── */
-.submit-wrap {
+/* Chip inside slot */
+.chip-placed {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
   text-align: center;
-  margin-top: 32px;
+  line-height: 1.3;
+  padding: 4px;
+  pointer-events: none;
+  user-select: none;
 }
 
+/* ── Pool area ── */
+.pool-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.chip-pool {
+  background: linear-gradient(135deg,#667eea18,#764ba212);
+  border: 1.5px solid #667eea50;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.chip-pool:hover, .chip-pool:active {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 14px rgba(102,126,234,0.28);
+  border-color: var(--accent);
+  background: linear-gradient(135deg,#667eea28,#764ba220);
+}
+
+.pool-empty-hint {
+  font-size: 12px;
+  color: #aaa;
+  font-style: italic;
+  align-self: center;
+}
+
+/* ── (slot-wrap removed; using flat grid now) ── */
+
+/* ── Score divider ── */
+.score-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.score-hint-line { flex: 1; height: 1px; background: linear-gradient(90deg,#764ba240,transparent); }
+.score-hint-line.right { background: linear-gradient(270deg,#ccc40,transparent); }
+.score-hint-text { font-size: 11px; color: #aaa; white-space: nowrap; }
+
+/* ── Submit ── */
+.submit-wrap { text-align: center; margin-top: 28px; }
 .btn-submit {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg,#667eea,#764ba2);
   color: white;
   border: none;
   border-radius: 14px;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
-  padding: 16px 48px;
+  padding: 15px 44px;
   cursor: pointer;
   box-shadow: 0 6px 24px rgba(102,126,234,0.4);
   transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  touch-action: manipulation;
 }
-.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(102,126,234,0.5); }
-.btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-.incomplete-note {
-  color: #E74C3C;
-  font-size: 13px;
-  margin-top: 10px;
-  min-height: 20px;
-}
+.btn-submit:hover  { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(102,126,234,0.5); }
+.btn-submit:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+.incomplete-note { color: var(--d); font-size: 13px; margin-top: 10px; min-height: 20px; }
 
 /* ── Results overlay ── */
 .results-overlay {
@@ -232,125 +257,84 @@ body {
   background: rgba(15,25,50,0.92);
   z-index: 200;
   overflow-y: auto;
-  padding: 40px 20px;
+  padding: 32px 16px;
   backdrop-filter: blur(8px);
 }
-
 .results-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
 
 .results-box {
   background: white;
   border-radius: 24px;
-  padding: 36px 32px;
+  padding: 32px 28px;
   width: 100%;
-  max-width: 560px;
+  max-width: 540px;
   margin: auto;
   text-align: center;
 }
+.results-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.results-sub   { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
 
-.results-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-.results-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-
-/* 4 score blocks */
-.score-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 24px;
-}
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 
 .score-block {
   border-radius: 16px;
-  padding: 20px 14px;
-  text-align: center;
+  padding: 18px 12px;
   color: white;
   position: relative;
   overflow: hidden;
 }
-
 .score-block.dominant::after {
   content: '★ 最高';
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  font-size: 10px;
-  font-weight: 700;
+  position: absolute; top: 8px; right: 9px;
+  font-size: 10px; font-weight: 700;
   background: rgba(255,255,255,0.25);
-  border-radius: 99px;
-  padding: 2px 7px;
+  border-radius: 99px; padding: 2px 7px;
 }
-
-.score-block .type-letter {
-  font-size: 42px;
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0.9;
-}
-.score-block .type-name { font-size: 13px; font-weight: 600; opacity: 0.85; margin: 4px 0 8px; }
-.score-block .type-score { font-size: 36px; font-weight: 900; line-height: 1; }
-.score-block .type-max { font-size: 12px; opacity: 0.65; margin-top: 2px; }
+.score-block .type-letter { font-size: 38px; font-weight: 900; line-height: 1; }
+.score-block .type-name   { font-size: 12px; font-weight: 600; opacity: 0.85; margin: 3px 0 8px; }
+.score-block .type-score  { font-size: 34px; font-weight: 900; line-height: 1; }
+.score-block .type-max    { font-size: 11px; opacity: 0.6; margin-top: 2px; }
 .score-block .type-traits { font-size: 11px; opacity: 0.8; margin-top: 8px; line-height: 1.5; }
 
-/* bar chart */
-.bar-chart { margin: 4px 0 28px; }
-.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.bar-label { width: 24px; font-weight: 800; font-size: 14px; text-align: right; flex-shrink: 0; }
+.bar-chart { margin: 4px 0 24px; }
+.bar-row   { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-label { width: 22px; font-weight: 800; font-size: 14px; text-align: right; flex-shrink: 0; }
 .bar-track { flex: 1; background: #f0f0f0; border-radius: 99px; height: 14px; overflow: hidden; }
-.bar-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
-.bar-val { width: 28px; font-size: 13px; font-weight: 700; text-align: left; flex-shrink: 0; }
+.bar-fill  { height: 100%; border-radius: 99px; transition: width 1s ease; }
+.bar-val   { width: 26px; font-size: 13px; font-weight: 700; text-align: left; flex-shrink: 0; }
 
-/* download button */
 .btn-download {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  padding: 13px 36px;
-  cursor: pointer;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  color: white; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 700;
+  padding: 13px 32px; cursor: pointer;
   box-shadow: 0 4px 16px rgba(102,126,234,0.4);
   transition: transform 0.15s, box-shadow 0.15s;
-  margin-bottom: 12px;
+  margin-bottom: 12px; touch-action: manipulation;
 }
 .btn-download:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(102,126,234,0.5); }
-
 .btn-redo {
-  display: block;
-  margin: 0 auto;
-  background: none;
-  border: 1.5px solid #ddd;
-  color: var(--muted);
-  border-radius: 10px;
-  font-size: 13px;
-  padding: 8px 20px;
-  cursor: pointer;
+  display: block; margin: 0 auto;
+  background: none; border: 1.5px solid #ddd;
+  color: var(--muted); border-radius: 10px;
+  font-size: 13px; padding: 8px 20px; cursor: pointer;
   transition: border-color 0.2s, color 0.2s;
 }
 .btn-redo:hover { border-color: #aaa; color: var(--text); }
 
-@media (max-width: 480px) {
-  .chip { font-size: 11px; padding: 8px 4px; }
-  .score-label { font-size: 10px; }
-  .results-box { padding: 24px 18px; }
-  .score-block .type-letter { font-size: 32px; }
-  .score-block .type-score { font-size: 28px; }
+@media (max-width: 440px) {
+  .chip-placed  { font-size: 11px; }
+  .chip-pool    { font-size: 12px; padding: 9px 11px; }
+  .slot-label   { font-size: 10px; }
+  .results-box  { padding: 22px 16px; }
+  .score-block .type-letter { font-size: 30px; }
+  .score-block .type-score  { font-size: 28px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Auth guard -->
-<script>
-  if (!sessionStorage.getItem('disc_auth')) {
-    window.location.href = 'index.html';
-  }
-</script>
+<script>if (!sessionStorage.getItem('disc_auth')) window.location.href = 'index.html';</script>
 
 <!-- Header -->
 <div class="header">
@@ -366,14 +350,12 @@ body {
   </div>
 </div>
 
-<!-- Instructions -->
 <div class="container">
   <div class="instructions">
-    <strong>說明：</strong>請依照您的<strong>直覺反應</strong>作答，沒有對或錯的答案。<br>
-    <strong>作答方式：</strong>每題有 4 個詞，請將它們<strong>拖曳排序</strong>——最左邊代表<strong>最像您（4分）</strong>，最右邊代表<strong>最不像您（1分）</strong>。每題的 1、2、3、4 分各用一次。
+    <strong>說明：</strong>請依照您的<strong>直覺</strong>作答，沒有對或錯。<br>
+    <strong>作答方式：</strong>每題有 4 個詞，<strong>依序點選</strong>放入分數格——第一個點的最像您（4分），最後點的最不像您（1分）。點已放入的詞可取消。
   </div>
 
-  <!-- Questions will be injected here -->
   <div id="questions-container"></div>
 
   <div class="submit-wrap">
@@ -387,19 +369,17 @@ body {
   <div class="results-box">
     <div class="results-title">🎉 我的 DISC 結果</div>
     <div class="results-sub">四個象限加總 = 120 分</div>
-
     <div class="score-grid" id="score-grid"></div>
     <div class="bar-chart" id="bar-chart"></div>
-
     <button class="btn-download" onclick="downloadImage()">⬇ 下載結果圖片</button>
     <button class="btn-redo" onclick="location.reload()">重新作答</button>
   </div>
 </div>
 
 <script>
-// ════════════════════════════════════════════
-//  DISC 題目資料（12列 × 4欄：D, I, S, C）
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
+//  題目資料（12列 × 4欄：D, I, S, C）
+// ══════════════════════════════════════════
 const QUESTIONS = [
   { D:'強力的',     I:'朝氣蓬勃的', S:'中庸的',     C:'老練的'     },
   { D:'積極的',     I:'情緒化的',   S:'隨和的',     C:'一致的'     },
@@ -422,105 +402,173 @@ const TYPE_META = {
   C: { name:'謹慎型', color:'#2980B9', traits:'精確・分析\n高標準・系統思考' },
 };
 
-// ════════════════════════════════════════════
-//  建立問卷 UI
-// ════════════════════════════════════════════
+const TYPES = ['D','I','S','C'];
+
+// ══════════════════════════════════════════
+//  狀態：rowState[i].slots = [type|null × 4]
+//  pos 0 = 4分（最像我）… pos 3 = 1分
+// ══════════════════════════════════════════
+const rowState = QUESTIONS.map(() => ({ slots: [null, null, null, null] }));
+
+// 每列展示順序打亂（避免學員看出欄位規律）
+const rowOrder = QUESTIONS.map(() => shuffle([...TYPES]));
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ══════════════════════════════════════════
+//  建立題目 HTML 骨架
+// ══════════════════════════════════════════
 const container = document.getElementById('questions-container');
 
-QUESTIONS.forEach((q, rowIdx) => {
-  // 打亂每列詞的順序，避免學員看出欄位規律
-  const words = Object.entries(q); // [['D','強力的'], ...]
-  shuffle(words);
-
+QUESTIONS.forEach((_, rowIdx) => {
   const card = document.createElement('div');
   card.className = 'q-card';
   card.id = `card-${rowIdx}`;
-
   card.innerHTML = `
     <div class="q-header">
       <span class="q-num">第 ${rowIdx + 1} 題</span>
-      <span class="q-status" id="status-${rowIdx}">拖曳排序</span>
+      <div class="q-right">
+        <span class="q-status" id="status-${rowIdx}">點選詞語放入分數格</span>
+        <button class="btn-reset" onclick="resetRow(${rowIdx})">重設</button>
+      </div>
     </div>
-    <div class="score-labels">
-      <div class="score-label">4　最像我</div>
-      <div class="score-label">3</div>
-      <div class="score-label">2</div>
-      <div class="score-label">1　最不像我</div>
+
+    <div class="slots-area" id="slots-${rowIdx}">
+      <!-- 第一列：標籤 -->
+      <div class="slot-label first">4<span>最像我</span></div>
+      <div class="slot-label">3</div>
+      <div class="slot-label">2</div>
+      <div class="slot-label last">1<span>最不像我</span></div>
+      <!-- 第二列：格子 -->
+      <div class="slot" id="slot-${rowIdx}-0" onclick="slotClick(${rowIdx},0)"></div>
+      <div class="slot" id="slot-${rowIdx}-1" onclick="slotClick(${rowIdx},1)"></div>
+      <div class="slot" id="slot-${rowIdx}-2" onclick="slotClick(${rowIdx},2)"></div>
+      <div class="slot" id="slot-${rowIdx}-3" onclick="slotClick(${rowIdx},3)"></div>
     </div>
-    <div class="chips-row" id="row-${rowIdx}">
-      ${words.map(([type, word]) =>
-        `<div class="chip" data-type="${type}">${word}</div>`
-      ).join('')}
-    </div>
+
+    <div class="pool-label">待選詞：</div>
+    <div class="pool" id="pool-${rowIdx}"></div>
   `;
   container.appendChild(card);
-
-  // 初始化 Sortable（含觸控支援）
-  Sortable.create(document.getElementById(`row-${rowIdx}`), {
-    animation: 180,
-    ghostClass: 'sortable-ghost',
-    chosenClass: 'sortable-chosen',
-    onEnd: () => updateRowStatus(rowIdx),
-  });
-
-  // 初始 pos 標記
-  updateRowStatus(rowIdx);
 });
 
-// ════════════════════════════════════════════
-//  更新進度
-// ════════════════════════════════════════════
-function updateRowStatus(rowIdx) {
-  // 每列永遠都是 4 個詞，所以直接標記完成
-  const card = document.getElementById(`card-${rowIdx}`);
-  const statusEl = document.getElementById(`status-${rowIdx}`);
-  card.classList.add('complete');
-  statusEl.textContent = '✓ 已排序';
+// 初始渲染
+QUESTIONS.forEach((_, i) => renderRow(i));
 
-  // 更新位置標記（顏色提示）
-  const chips = document.querySelectorAll(`#row-${rowIdx} .chip`);
-  chips.forEach((chip, i) => chip.setAttribute('data-pos', i));
-
+// ══════════════════════════════════════════
+//  操作函式
+// ══════════════════════════════════════════
+function placeChip(rowIdx, type) {
+  const slots = rowState[rowIdx].slots;
+  const nextEmpty = slots.findIndex(s => s === null);
+  if (nextEmpty === -1) return;
+  slots[nextEmpty] = type;
+  renderRow(rowIdx);
   updateProgress();
 }
 
-function updateProgress() {
-  // 所有題目因初始就已有詞，視為「任何排序皆有效」
-  // 只需確認每列都有 4 個 chip（Sortable 保證不會消失）
-  const done = QUESTIONS.length; // 永遠全部完成（學員只需排序，不需拖入空格）
-  document.getElementById('progress-text').textContent = `${done} / 12 完成`;
-  document.getElementById('progress-bar').style.width = `${(done/12)*100}%`;
+function slotClick(rowIdx, pos) {
+  if (!rowState[rowIdx].slots[pos]) return; // 空格不處理
+  rowState[rowIdx].slots[pos] = null;
+  renderRow(rowIdx);
+  updateProgress();
 }
 
-// 初始化就更新一次
-updateProgress();
+function resetRow(rowIdx) {
+  rowState[rowIdx].slots = [null, null, null, null];
+  renderRow(rowIdx);
+  updateProgress();
+}
 
-// ════════════════════════════════════════════
-//  計分
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
+//  渲染單列
+// ══════════════════════════════════════════
+function renderRow(rowIdx) {
+  const q     = QUESTIONS[rowIdx];
+  const slots = rowState[rowIdx].slots;
+  const placed = new Set(slots.filter(Boolean));
+  const isComplete = placed.size === 4;
+
+  // 卡片狀態
+  const card = document.getElementById(`card-${rowIdx}`);
+  card.className = 'q-card' + (isComplete ? ' complete' : '');
+
+  // 狀態文字
+  const remaining = 4 - placed.size;
+  document.getElementById(`status-${rowIdx}`).textContent =
+    isComplete ? '✓ 完成' : `還剩 ${remaining} 個詞`;
+
+  // 插槽
+  for (let pos = 0; pos < 4; pos++) {
+    const slotEl = document.getElementById(`slot-${rowIdx}-${pos}`);
+    const type = slots[pos];
+    if (type) {
+      slotEl.className = 'slot filled';
+      slotEl.innerHTML = `<div class="chip-placed">${q[type]}</div>`;
+    } else {
+      slotEl.className = 'slot';
+      slotEl.innerHTML = '';
+    }
+  }
+
+  // 待選詞（依打亂順序顯示，跳過已放置的）
+  const poolEl = document.getElementById(`pool-${rowIdx}`);
+  const poolTypes = rowOrder[rowIdx].filter(t => !placed.has(t));
+  if (poolTypes.length === 0) {
+    poolEl.innerHTML = '<span class="pool-empty-hint">所有詞已放入，點分數格可取消</span>';
+  } else {
+    poolEl.innerHTML = poolTypes.map(type =>
+      `<div class="chip-pool" onclick="placeChip(${rowIdx},'${type}')">${q[type]}</div>`
+    ).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+//  進度條
+// ══════════════════════════════════════════
+function updateProgress() {
+  const done = rowState.filter(r => r.slots.every(s => s !== null)).length;
+  document.getElementById('progress-text').textContent = `${done} / 12 完成`;
+  document.getElementById('progress-bar').style.width = `${(done / 12) * 100}%`;
+}
+
+// ══════════════════════════════════════════
+//  計分（pos 0=4分 … pos 3=1分）
+// ══════════════════════════════════════════
 function calculateScores() {
   const scores = { D:0, I:0, S:0, C:0 };
-  for (let rowIdx = 0; rowIdx < 12; rowIdx++) {
-    const chips = document.querySelectorAll(`#row-${rowIdx} .chip`);
-    // 位置 0 = 4分（最像我）… 位置 3 = 1分（最不像我）
-    chips.forEach((chip, pos) => {
-      const score = 4 - pos;
-      scores[chip.dataset.type] += score;
+  rowState.forEach(row => {
+    row.slots.forEach((type, pos) => {
+      if (type) scores[type] += (4 - pos);
     });
-  }
+  });
   return scores;
 }
 
-// ════════════════════════════════════════════
-//  提交 & 顯示結果
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
+//  提交
+// ══════════════════════════════════════════
 function submitSurvey() {
-  const scores = calculateScores();
-  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const incomplete = rowState.findIndex(r => r.slots.some(s => s === null));
+  if (incomplete !== -1) {
+    document.getElementById('incomplete-note').textContent =
+      `⚠ 第 ${incomplete + 1} 題尚未完成，請將所有詞放入分數格`;
+    document.getElementById(`card-${incomplete}`)
+      .scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
 
+  const scores = calculateScores();
+  const total = Object.values(scores).reduce((a, b) => a + b, 0);
   if (total !== 120) {
     document.getElementById('incomplete-note').textContent =
-      `⚠ 計分異常（目前總分 ${total}，應為 120），請重新整理頁面再試。`;
+      `⚠ 計分異常（總分 ${total}，應為 120），請重新整理頁面。`;
     return;
   }
 
@@ -528,20 +576,21 @@ function submitSurvey() {
   renderResults(scores);
 }
 
+// ══════════════════════════════════════════
+//  結果頁
+// ══════════════════════════════════════════
 function renderResults(scores) {
-  // 找最高分
-  const maxScore = Math.max(...Object.values(scores));
-  const order = ['D','I','S','C'];
+  const maxScore = Math.max(...TYPES.map(t => scores[t]));
 
   // Score blocks
   const grid = document.getElementById('score-grid');
   grid.innerHTML = '';
-  order.forEach(type => {
+  TYPES.forEach(type => {
     const meta = TYPE_META[type];
-    const isDominant = scores[type] === maxScore;
+    const isDom = scores[type] === maxScore;
     const block = document.createElement('div');
-    block.className = 'score-block' + (isDominant ? ' dominant' : '');
-    block.style.background = `linear-gradient(135deg, ${meta.color}dd, ${meta.color}aa)`;
+    block.className = 'score-block' + (isDom ? ' dominant' : '');
+    block.style.background = `linear-gradient(135deg,${meta.color}ee,${meta.color}99)`;
     block.innerHTML = `
       <div class="type-letter">${type}</div>
       <div class="type-name">${meta.name}</div>
@@ -554,39 +603,30 @@ function renderResults(scores) {
 
   // Bar chart
   const chart = document.getElementById('bar-chart');
-  chart.innerHTML = '';
-  order.forEach(type => {
+  chart.innerHTML = TYPES.map(type => {
     const meta = TYPE_META[type];
-    const pct = (scores[type] / 48) * 100;
-    chart.innerHTML += `
+    const pct = (scores[type] / 48 * 100).toFixed(1);
+    return `
       <div class="bar-row">
         <div class="bar-label" style="color:${meta.color}">${type}</div>
         <div class="bar-track">
-          <div class="bar-fill" style="background:${meta.color}; width:0%"
-               data-pct="${pct.toFixed(1)}"></div>
+          <div class="bar-fill" style="background:${meta.color};width:0%" data-pct="${pct}"></div>
         </div>
         <div class="bar-val">${scores[type]}</div>
-      </div>
-    `;
-  });
+      </div>`;
+  }).join('');
 
-  // Show overlay
   document.getElementById('results-overlay').classList.add('show');
-
-  // Animate bars after paint
   setTimeout(() => {
-    document.querySelectorAll('.bar-fill').forEach(bar => {
-      bar.style.width = bar.dataset.pct + '%';
-    });
-  }, 100);
+    document.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.pct + '%'; });
+  }, 80);
 
-  // Store scores for image generation
   window._discScores = scores;
 }
 
-// ════════════════════════════════════════════
-//  Canvas 結果圖片生成
-// ════════════════════════════════════════════
+// ══════════════════════════════════════════
+//  Canvas 結果圖片
+// ══════════════════════════════════════════
 function downloadImage() {
   const scores = window._discScores;
   if (!scores) return;
@@ -596,166 +636,125 @@ function downloadImage() {
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
 
-  // ── 背景 ──
+  // 背景
   const bgGrad = ctx.createLinearGradient(0, 0, W, H);
   bgGrad.addColorStop(0, '#1a1a2e');
   bgGrad.addColorStop(1, '#0f3460');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // ── 標題 ──
-  ctx.fillStyle = 'rgba(255,255,255,0.08)';
-  ctx.fillRect(0, 0, W, 72);
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 26px "PingFang TC", "Microsoft JhengHei", Arial';
+  // 標題列
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  ctx.fillRect(0, 0, W, 70);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 26px "PingFang TC","Microsoft JhengHei",Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('DISC 個性人際關係結果', W/2, 44);
+  ctx.fillText('DISC 個性人際關係結果', W / 2, 43);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '13px "PingFang TC","Microsoft JhengHei",Arial';
+  ctx.fillText('Relational Style Assessment', W / 2, 62);
 
-  ctx.fillStyle = 'rgba(255,255,255,0.45)';
-  ctx.font = '14px "PingFang TC", "Microsoft JhengHei", Arial';
-  ctx.fillText('Relational Style Assessment', W/2, 64);
+  // 四個象限方塊
+  const colors  = { D:'#E74C3C', I:'#F39C12', S:'#27AE60', C:'#2980B9' };
+  const names   = { D:'主導型',   I:'影響型',   S:'穩健型',   C:'謹慎型'  };
+  const traits  = { D:['果決','目標導向','直接'], I:['熱情','樂觀','善溝通'], S:['耐心','可靠','善傾聽'], C:['精確','分析','高標準'] };
+  const maxScore = Math.max(...TYPES.map(t => scores[t]));
 
-  // ── 四個象限方塊 ──
-  const types = ['D','I','S','C'];
-  const colors = { D:'#E74C3C', I:'#F39C12', S:'#27AE60', C:'#2980B9' };
-  const names  = { D:'主導型', I:'影響型', S:'穩健型', C:'謹慎型' };
-  const traits = {
-    D:['果決','目標導向','直接'],
-    I:['熱情','樂觀','善溝通'],
-    S:['耐心','可靠','善傾聽'],
-    C:['精確','分析','高標準'],
-  };
+  const bW = 188, bH = 198, gap = 14;
+  const startX = (W - (bW * 4 + gap * 3)) / 2;
+  const startY = 85;
 
-  const maxScore = Math.max(...types.map(t => scores[t]));
-  const blockW = 190, blockH = 200, gap = 16;
-  const startX = (W - (blockW*4 + gap*3)) / 2;
-  const startY = 90;
-
-  types.forEach((type, i) => {
-    const x = startX + i*(blockW+gap);
-    const y = startY;
+  TYPES.forEach((type, i) => {
+    const x = startX + i * (bW + gap), y = startY;
     const isDom = scores[type] === maxScore;
 
-    // Card background
-    roundRect(ctx, x, y, blockW, blockH, 16);
-    const grad = ctx.createLinearGradient(x, y, x+blockW, y+blockH);
-    grad.addColorStop(0, colors[type] + 'ee');
-    grad.addColorStop(1, colors[type] + '99');
-    ctx.fillStyle = grad;
+    rrect(ctx, x, y, bW, bH, 15);
+    const g = ctx.createLinearGradient(x, y, x + bW, y + bH);
+    g.addColorStop(0, colors[type] + 'ee');
+    g.addColorStop(1, colors[type] + '88');
+    ctx.fillStyle = g;
     ctx.fill();
 
-    // Glow border for dominant
     if (isDom) {
-      ctx.strokeStyle = '#ffffff88';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      // Star label
-      ctx.fillStyle = 'rgba(255,255,255,0.28)';
-      roundRect(ctx, x+blockW-64, y+10, 56, 20, 10);
-      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2.5; ctx.stroke();
+      rrect(ctx, x + bW - 62, y + 9, 54, 20, 10);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fill();
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 11px "PingFang TC","Microsoft JhengHei",Arial';
+      ctx.font = 'bold 10px "PingFang TC","Microsoft JhengHei",Arial';
       ctx.textAlign = 'center';
-      ctx.fillText('★ 最高', x+blockW-36, y+24);
+      ctx.fillText('★ 最高', x + bW - 35, y + 23);
     }
 
     ctx.textAlign = 'center';
-    // Letter
-    ctx.fillStyle = 'rgba(255,255,255,0.25)';
-    ctx.font = `bold 72px "Helvetica Neue", Arial`;
-    ctx.fillText(type, x+blockW/2, y+76);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 72px "Helvetica Neue", Arial`;
-    ctx.fillText(type, x+blockW/2, y+74);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.font = 'bold 70px "Helvetica Neue",Arial';
+    ctx.fillText(type, x + bW / 2, y + 75);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 70px "Helvetica Neue",Arial';
+    ctx.fillText(type, x + bW / 2, y + 73);
 
-    // Type name
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = `bold 14px "PingFang TC","Microsoft JhengHei",Arial`;
-    ctx.fillText(names[type], x+blockW/2, y+96);
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = 'bold 13px "PingFang TC","Microsoft JhengHei",Arial';
+    ctx.fillText(names[type], x + bW / 2, y + 94);
 
-    // Score
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 38px "Helvetica Neue", Arial`;
-    ctx.fillText(scores[type], x+blockW/2, y+140);
-    ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font = `13px "Helvetica Neue", Arial`;
-    ctx.fillText('/ 48', x+blockW/2, y+158);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 36px "Helvetica Neue",Arial';
+    ctx.fillText(scores[type], x + bW / 2, y + 137);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '12px "Helvetica Neue",Arial';
+    ctx.fillText('/ 48', x + bW / 2, y + 154);
 
-    // Traits
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
-    ctx.font = `12px "PingFang TC","Microsoft JhengHei",Arial`;
-    ctx.fillText(traits[type].join(' · '), x+blockW/2, y+183);
+    ctx.font = '12px "PingFang TC","Microsoft JhengHei",Arial';
+    ctx.fillText(traits[type].join(' · '), x + bW / 2, y + 180);
   });
 
-  // ── Bar chart ──
-  const barY = startY + blockH + 28;
-  const barH = 18;
-  const barAreaX = 70, barAreaW = W - 140;
+  // Bar chart
+  const barY = startY + bH + 26;
+  const barH = 17;
+  const barX = 68, barW = W - 136;
 
-  types.forEach((type, i) => {
-    const y = barY + i*(barH+12);
-    const pct = scores[type]/48;
-    const fillW = barAreaW * pct;
+  TYPES.forEach((type, i) => {
+    const y = barY + i * (barH + 11);
+    const pct = scores[type] / 48;
 
-    // Track
-    roundRect(ctx, barAreaX, y, barAreaW, barH, barH/2);
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fill();
+    rrect(ctx, barX, y, barW, barH, barH / 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill();
 
-    // Fill
-    roundRect(ctx, barAreaX, y, fillW, barH, barH/2);
+    rrect(ctx, barX, y, barW * pct, barH, barH / 2);
+    ctx.fillStyle = colors[type]; ctx.fill();
+
     ctx.fillStyle = colors[type];
-    ctx.fill();
-
-    // Label
-    ctx.fillStyle = colors[type];
-    ctx.font = `bold 14px "Helvetica Neue", Arial`;
+    ctx.font = 'bold 13px "Helvetica Neue",Arial';
     ctx.textAlign = 'right';
-    ctx.fillText(type, barAreaX-10, y+barH-3);
+    ctx.fillText(type, barX - 9, y + barH - 3);
 
-    // Value
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 13px "Helvetica Neue", Arial`;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px "Helvetica Neue",Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(scores[type], barAreaX+fillW+8, y+barH-3);
+    ctx.fillText(scores[type], barX + barW * pct + 7, y + barH - 3);
   });
 
-  // ── Footer ──
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.font = `12px "PingFang TC","Microsoft JhengHei",Arial`;
+  // Footer
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = '11px "PingFang TC","Microsoft JhengHei",Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('DISC Relational Style Assessment', W/2, H-14);
+  ctx.fillText('DISC Relational Style Assessment', W / 2, H - 12);
 
-  // ── Download ──
   const link = document.createElement('a');
   link.download = 'DISC_我的結果.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
 
-// Helper: rounded rect path
-function roundRect(ctx, x, y, w, h, r) {
+function rrect(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.lineTo(x+w-r, y);
-  ctx.arcTo(x+w, y, x+w, y+r, r);
-  ctx.lineTo(x+w, y+h-r);
-  ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
-  ctx.lineTo(x+r, y+h);
-  ctx.arcTo(x, y+h, x, y+h-r, r);
-  ctx.lineTo(x, y+r);
-  ctx.arcTo(x, y, x+r, y, r);
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
-}
-
-// Fisher-Yates shuffle
-function shuffle(arr) {
-  for (let i = arr.length-1; i>0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
 </script>
 </body>
