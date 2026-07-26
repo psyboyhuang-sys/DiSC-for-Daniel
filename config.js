@@ -1,3 +1,3 @@
 // DISC Survey Password Configuration
 // ⚠️ 請使用 admin.html 管理密碼，勿手動修改此檔案
-const DISC_CONFIG = {"passwords":[{"code":"demo2026","expiry":"2026-12-31","label":"ç¤ºç¯ç¨å¯ç¢¼"},{"code":"0721","expiry":"2026-07-21","label":"大橋校"},{"code":"0723","expiry":"2026-07-23","label":"永信校"}]};
+const DISC_CONFIG = {"passwords":[{"code":"demo2026","expiry":"2026-12-31","label":"ç¤ºç¯ç¨å¯ç¢¼"},{"code":"0721","expiry":"2026-07-21","label":"大橋校"},{"code":"0723","expiry":"2026-07-23","label":"永信校"},{"code":"0727","expiry":"2026-07-27","label":"福鼎五行"}]};
