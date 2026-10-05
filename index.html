@@ -4,7 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>行事與人際互動問卷</title>
-<script src="config.js"></script>
+<script>
+  // 每次使用唯一網址載入密碼設定，避免 GitHub Pages/CDN 沿用舊快取。
+  const configReady = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `config.js?v=${Date.now()}`;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('密碼設定載入失敗'));
+    document.head.appendChild(script);
+  });
+</script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -183,7 +192,7 @@
     if (e.key === 'Enter') checkPassword();
   });
 
-  function checkPassword() {
+  async function checkPassword() {
     const input = document.getElementById('pw-input').value.trim();
     const errorEl = document.getElementById('error-msg');
     const btn = document.getElementById('enter-btn');
@@ -195,6 +204,15 @@
 
     btn.disabled = true;
     btn.textContent = '驗證中…';
+
+    try {
+      await configReady;
+    } catch (err) {
+      showError('密碼設定載入失敗，請重新整理頁面');
+      btn.disabled = false;
+      btn.textContent = '進入問卷 →';
+      return;
+    }
 
     // 稍微延遲，避免暴力測試
     setTimeout(() => {
