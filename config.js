@@ -1,3 +1,4 @@
-// DISC Survey Password Configuration
-// ⚠️ 請使用 admin.html 管理密碼，勿手動修改此檔案
-const DISC_CONFIG = {"passwords":[{"code":"demo2026","expiry":"2026-12-31","label":"ç¤ºç¯ç¨å¯ç¢¼"},{"code":"1006","expiry":"2026-10-07","label":"AI助攻溝通課"},{"code":"1014","expiry":"2026-10-15","label":"用提問與引導打造職場高效對話術"}]};
+// DISC 問卷設定
+// 後台網址：Google Apps Script「網頁應用程式」部署後取得的網址（以 /exec 結尾）
+// 設定方式請見 後台/設定教學.md
+const API_URL = 'https://script.google.com/macros/s/AKfycbzjUAyAsOcFo1FCoKolU2WPaUJKlfrVocXh7O1E4AVCLfzNfjOeTmNCaJdq8E4xDlYT/exec';
