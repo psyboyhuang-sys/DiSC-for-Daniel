@@ -836,28 +836,64 @@ const AI_SECTIONS = [
   { key: 'suggestions', icon: '🎯', title: '給你的建議' },
 ];
 
+// 手機瀏覽器約 60 秒沒回應就會自行中斷連線，AI 偶爾會比這更久：
+// 每次請求最多等 25 秒，之後用同一個 requestId 每 3 秒回後台問結果
+const ANALYSIS_REQUEST_TIMEOUT = 25000;
+const ANALYSIS_POLL_INTERVAL   = 3000;
+const ANALYSIS_MAX_WAIT        = 180000;
+
 async function requestAnalysis() {
   const content = document.getElementById('ai-content');
   window._discAnalysis = null;
-  content.innerHTML =
-    '<div class="ai-loading"><span class="ai-spinner"></span>AI 正在為你撰寫解析，約需 10 秒…</div>';
+  showAiLoading('AI 正在為你撰寫解析，約需 10 秒…');
+
+  // 每次查看結果或按「重試」都是一個新的 requestId
+  const payload = {
+    action:    'analyze',
+    requestId: newRequestId(),
+    token:     sessionStorage.getItem('disc_token'),
+    scene:     window._discScene,
+    challenge: document.getElementById('challenge-input').value.trim(),
+    scores:    window._discScores,
+  };
+  const start = Date.now();
 
   try {
-    const res = await callApi({
-      action:    'analyze',
-      token:     sessionStorage.getItem('disc_token'),
-      scene:     window._discScene,
-      challenge: document.getElementById('challenge-input').value.trim(),
-      scores:    window._discScores,
-    });
-    if (!res.ok) throw new Error(res.error || 'AI 解析失敗');
-    window._discAnalysis = res.analysis;
-    renderAnalysis(res.analysis);
+    for (;;) {
+      let res;
+      try {
+        res = await callApi(payload, ANALYSIS_REQUEST_TIMEOUT);
+      } catch (err) {
+        if (!err.retryable || Date.now() - start > ANALYSIS_MAX_WAIT) throw err;
+        res = { ok: false, pending: true }; // 連線中斷，後台可能還在產生解析
+      }
+
+      if (res.ok) {
+        window._discAnalysis = res.analysis;
+        renderAnalysis(res.analysis);
+        return;
+      }
+      if (!res.pending) throw new Error(res.error || 'AI 解析失敗');
+      if (Date.now() - start > ANALYSIS_MAX_WAIT) throw new Error('AI 解析等候太久，請按「重試」');
+      if (Date.now() - start > 20000) showAiLoading('AI 還在努力撰寫中，請再稍候一下…');
+      await new Promise(resolve => setTimeout(resolve, ANALYSIS_POLL_INTERVAL));
+    }
   } catch (err) {
     const retry = el('button', 'btn-retry', '重試');
     retry.onclick = requestAnalysis;
     content.replaceChildren(el('div', 'ai-error', '⚠ ' + err.message), retry);
   }
+}
+
+function showAiLoading(message) {
+  const loading = el('div', 'ai-loading', message);
+  loading.prepend(el('span', 'ai-spinner'));
+  document.getElementById('ai-content').replaceChildren(loading);
+}
+
+function newRequestId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }
 
 // AI 回傳的文字一律用 textContent 放入，不當 HTML 解析
